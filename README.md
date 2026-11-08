@@ -1,6 +1,8 @@
 # tetricide
 
-tetris on the DE2 via Quartus II
+tetris on the Cyclone II via Quartus
+
+![block diagram](./docs/block-diagram.svg)
 
 The canonical repo for this is hosted on tangled over at [`https://tangled.org/dunkirk.sh/tetricide`](https://tangled.org/dunkirk.sh/tetricide)
 

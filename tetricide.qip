@@ -8,4 +8,7 @@ set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/game_
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/renderer.vhd"]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/tetris_core.vhd"]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/vga_timing.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/clk_div2.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/vga_out.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/hex4.vhd"]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/tetricide.vhd"]

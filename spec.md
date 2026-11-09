@@ -9,7 +9,7 @@ EGCP 1010 Lab 8 creative design.
 | thing | value |
 | --- | --- |
 | board | DE1, Cyclone II EP2C20 (18,752 LEs, 52 M4K blocks) |
-| toolchain | Quartus II 13.0 SP1 (last release with Cyclone II) |
+| toolchain | Quartus II 8.1 Web Edition (what the lab project uses; 13.0 SP1 also works) |
 | language | VHDL-93, `ieee.numeric_std` only |
 | pixel clock | 25 MHz, `CLOCK_50` divided by 2 |
 | video | 640x480 @ 60 Hz, 4 bits per channel through the DE1 resistor DAC |

@@ -1,0 +1,6 @@
+QUARTUS_VERSION = "8.1"
+DATE = "00:00:00  November 09, 2026"
+
+# Revisions
+
+PROJECT_REVISION = "tetricide"

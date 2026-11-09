@@ -1,2 +1,4 @@
 build/
 sim/out/
+tetricide.qar
+__pycache__/

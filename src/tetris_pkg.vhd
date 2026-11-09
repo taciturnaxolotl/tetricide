@@ -21,6 +21,17 @@ package tetris_pkg is
     subtype py_t is integer range 0 to 20;
     constant SPAWN_PX : px_t := 6;
 
+    constant ANIM_LEN : integer := 16;  -- frames of line-clear dissolve
+    constant OVER_LEN : integer := 40;  -- frames of game-over curtain
+    constant MELT_LEN : integer := 32;  -- frames per half of a scene transition
+
+    -- scene shown, and which half of a transition is running
+    subtype scene_t is integer range 0 to 2;
+    constant SC_TITLE : scene_t := 0;
+    constant SC_GAME  : scene_t := 1;
+    constant SC_OVER  : scene_t := 2;
+    subtype mphase_t is integer range 0 to 2;  -- 0 none, 1 melting out, 2 pouring in
+
     subtype rgb_t is std_logic_vector(11 downto 0);  -- R G B, 4 bits each
     constant GRAY : integer := 8;                    -- palette index for game over
 

@@ -30,15 +30,24 @@ entity game_logic is
         next_shape  : out shape_t;
         game_over   : out std_logic;
         lines_bcd   : out std_logic_vector(15 downto 0);
-        level_bcd   : out std_logic_vector(7 downto 0)
+        level_bcd   : out std_logic_vector(7 downto 0);
+        piece_on    : out std_logic;                      -- draw the falling piece and ghost
+        anim_rows   : out std_logic_vector(ROWS - 1 downto 0);  -- rows dissolving
+        anim_t      : out integer range 0 to ANIM_LEN - 1;
+        over_t      : out integer range 0 to OVER_LEN;   -- frames since game over
+        frame_cnt   : out std_logic_vector(9 downto 0);
+        scene       : out scene_t;
+        mphase      : out mphase_t;
+        melt_t      : out integer range 0 to MELT_LEN - 1;
+        scene_t_out : out integer range 0 to 127          -- frames since scene appeared
     );
 end game_logic;
 
 architecture rtl of game_logic is
     type state_t is (S_RESET, S_SPAWN, S_SPAWN_CHK, S_WAIT, S_ROT, S_ROT_CHK,
                      S_MOVE, S_MOVE_CHK, S_FALL, S_FALL_CHK, S_HARD_CHK,
-                     S_GHOST_CHK, S_LOCK, S_CLEAR, S_OVER);
-    signal st : state_t := S_RESET;
+                     S_GHOST_CHK, S_LOCK, S_FIND, S_ANIM, S_CLEAR, S_OVER, S_TITLE, S_HOLD);
+    signal st : state_t := S_TITLE;
 
     signal brd : board_t := EMPTY_BOARD;
     signal cs  : shape_t := 0;
@@ -79,6 +88,19 @@ architecture rtl of game_logic is
     signal over      : std_logic := '0';
 
     signal lfsr : std_logic_vector(15 downto 0) := x"ACE1";
+
+    signal arows : std_logic_vector(ROWS - 1 downto 0) := (others => '0');
+    signal at    : integer range 0 to ANIM_LEN - 1 := 0;
+    signal ot    : integer range 0 to OVER_LEN := 0;
+    signal fcnt  : unsigned(9 downto 0) := (others => '0');
+
+    -- scene transitions: melt the old scene out, switch, pour the new one in
+    signal scn      : scene_t  := SC_TITLE;
+    signal scn_next : scene_t  := SC_TITLE;
+    signal mph      : mphase_t := 2;
+    signal mt       : integer range 0 to MELT_LEN - 1 := 0;
+    signal sct      : integer range 0 to 127 := 0;
+    signal go_req   : std_logic := '0';  -- request a transition to scn_next
 
     function pick(l : std_logic_vector(15 downto 0); avoid : shape_t;
                   forced : std_logic_vector(2 downto 0)) return shape_t is
@@ -128,6 +150,15 @@ begin
     game_over  <= over;
     lines_bcd  <= lines;
     level_bcd  <= lvl_bcd;
+    piece_on   <= '0' when st = S_ANIM or st = S_OVER else '1';
+    anim_rows  <= arows;
+    anim_t     <= at;
+    over_t     <= ot;
+    frame_cnt  <= std_logic_vector(fcnt);
+    scene      <= scn;
+    mphase     <= mph;
+    melt_t     <= mt;
+    scene_t_out <= sct;
 
     process (clk)
         variable keys  : std_logic_vector(5 downto 0);
@@ -148,6 +179,29 @@ begin
             vs_sync <= vs_sync(1 downto 0) & vert_sync;
             if vs_sync(1) = '1' and vs_sync(2) = '0' then
                 frame_rq <= '1';
+                fcnt     <= fcnt + 1;
+                if sct < 127 then
+                    sct <= sct + 1;
+                end if;
+                if mph /= 0 then
+                    if mt = MELT_LEN - 1 then
+                        mt <= 0;
+                        if mph = 1 then
+                            mph <= 2;
+                            scn <= scn_next;
+                            sct <= 0;
+                        else
+                            mph <= 0;
+                        end if;
+                    else
+                        mt <= mt + 1;
+                    end if;
+                end if;
+            end if;
+            if go_req = '1' then
+                go_req <= '0';
+                mph    <= 1;
+                mt     <= 0;
             end if;
 
             keys  := k_drop & k_ccw & k_cw & k_down & k_right & k_left;
@@ -163,6 +217,8 @@ begin
                     lvl_bcd   <= "0000" & std_logic_vector(to_unsigned(clamp_level(start_level), 4));
                     lvl_lines <= 0;
                     over      <= '0';
+                    ot        <= 0;
+                    arows     <= (others => '0');
                     grav_cnt  <= 0;
                     das       <= 0;
                     ns        <= pick(lfsr, ns, "111");
@@ -193,8 +249,29 @@ begin
                         st <= S_GHOST_CHK;
                     end if;
 
-                when S_WAIT =>
+                when S_TITLE =>
                     if frame_rq = '1' then
+                        frame_rq <= '0';
+                        if acc(5) = '1' and mph = 0 then
+                            scn_next <= SC_GAME;
+                            go_req   <= '1';
+                            st       <= S_HOLD;
+                        end if;
+                        acc := (others => '0');
+                    end if;
+
+                -- keep the old screen's numbers until it has melted away
+                when S_HOLD =>
+                    if mph = 2 then
+                        st <= S_RESET;
+                    end if;
+
+                when S_WAIT =>
+                    if frame_rq = '1' and mph /= 0 then
+                        -- the game holds still while the screen changes
+                        frame_rq <= '0';
+                        acc := (others => '0');
+                    elsif frame_rq = '1' then
                         frame_rq <= '0';
                         fp  := acc;
                         acc := (others => '0');
@@ -334,7 +411,33 @@ begin
                             end if;
                         end loop;
                     end loop;
-                    st <= S_CLEAR;
+                    st <= S_FIND;
+
+                -- mark full rows and play the dissolve before collapsing them
+                when S_FIND =>
+                    for r in 0 to ROWS - 1 loop
+                        if row_full(brd(r)) then
+                            arows(r) <= '1';
+                        else
+                            arows(r) <= '0';
+                        end if;
+                    end loop;
+                    at <= 0;
+                    st <= S_ANIM;
+
+                when S_ANIM =>
+                    if arows = (arows'range => '0') then
+                        st <= S_SPAWN;
+                    elsif frame_rq = '1' then
+                        frame_rq <= '0';
+                        acc := (others => '0');
+                        if at = ANIM_LEN - 1 then
+                            arows <= (others => '0');
+                            st    <= S_CLEAR;
+                        else
+                            at <= at + 1;
+                        end if;
+                    end if;
 
                 when S_CLEAR =>
                     full := -1;
@@ -367,8 +470,16 @@ begin
                 when S_OVER =>
                     if frame_rq = '1' then
                         frame_rq <= '0';
-                        if acc(5) = '1' then
-                            st <= S_RESET;
+                        if ot < OVER_LEN then
+                            ot <= ot + 1;
+                            if ot = OVER_LEN - 1 then
+                                scn_next <= SC_OVER;
+                                go_req   <= '1';
+                            end if;
+                        elsif acc(5) = '1' and mph = 0 then
+                            scn_next <= SC_GAME;
+                            go_req   <= '1';
+                            st       <= S_HOLD;
                         end if;
                         acc := (others => '0');
                     end if;
@@ -377,7 +488,11 @@ begin
             pressed <= acc;
 
             if reset_n = '0' then
-                st       <= S_RESET;
+                st       <= S_TITLE;
+                scn      <= SC_TITLE;
+                mph      <= 2;
+                mt       <= 0;
+                sct      <= 0;
                 frame_rq <= '0';
                 pressed  <= (others => '0');
             end if;

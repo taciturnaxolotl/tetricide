@@ -164,7 +164,17 @@ begin
         force_piece <= P_I;
         wait for 1 us;
         reset_n <= '1';
-        tick(2);
+        -- title pours in, letters drop
+        tick(16);
+        screenshot("00a_title_pour");
+        tick(40);
+        screenshot("00b_title");
+        drop;
+        tick(14);
+        screenshot("00c_melt");
+        tick(30);
+        screenshot("00d_pour_game");
+        tick(30);
         screenshot("01_spawn");
         expect_cell(3, 1, CYAN, "I spawns at columns 3-6");
         expect_cell(6, 1, CYAN, "I spawns at columns 3-6");
@@ -188,6 +198,11 @@ begin
         taps(K_RIGHT, true, 4);
         expect_cell(9, 1, YELLOW, "O at the right wall");
         drop;
+        tick(1);
+        screenshot("02a_flash");
+        tick(5);
+        screenshot("02b_dissolve");
+        tick(12);
         expect(lines_bcd = x"0001", "one line cleared");
         expect_cell(8, 19, YELLOW, "O top half shifted down");
         expect_cell(9, 19, YELLOW, "O top half shifted down");
@@ -213,12 +228,19 @@ begin
             drop;
         end loop;
         expect(game_over = '1', "stacking to the top ends the game");
-        screenshot("04_over");
+        tick(14);
+        screenshot("04a_curtain");
+        drop;
+        expect(game_over = '1', "space is ignored until the curtain is up");
+        tick(28);
+        screenshot("04b_melt");
+        tick(64);
+        screenshot("04c_over");
 
         -- space restarts
         force_piece <= P_RANDOM;
         drop;
-        tick(1);
+        tick(70);
         expect(game_over = '0', "space restarts");
         expect(lines_bcd = x"0000", "restart clears lines");
 

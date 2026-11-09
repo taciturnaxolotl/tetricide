@@ -185,8 +185,29 @@ redrawn in Python, not by editing VHDL:
   the empty well has a faint dot at each cell corner.
 - **Ghost:** on `SW[9]`. The piece's color at 1/4 brightness, with a 1 px
   edge at 1/2 brightness drawn only on the outside of the shape.
-- **Game over:** stack turns gray, frame stays, a black banner reads
-  `GAME OVER` / `PRESS SPACE`.
+- **Line clear:** full rows flash white for 3 frames, then dissolve outward
+  from the middle over 13 frames: a front moves 9 px a frame, Bayer-dithered
+  so it breaks up into pixels, with a pale-yellow and orange edge ahead of the
+  cleared area. Then the rows collapse. (`S_FIND` -> `S_ANIM` -> `S_CLEAR`;
+  the falling piece is hidden meanwhile and keys are ignored.)
+- **Scenes:** title, game and game over. Power-up and reset start on the
+  title. Space on the title starts a game; game over leads to the game-over
+  scene; space there starts a new game.
+- **Sand melt:** every scene change melts the old scene out and pours the new
+  one in, 32 frames each. The screen is split into 4 px columns; each falls
+  like gravity (`offset = t^2`) after a pseudo-random delay of 0 to 7 frames,
+  and every pixel adds 0 to 15 px of hashed slip, so the picture breaks into
+  grains. Only the foreground moves; the background gradient stays. Nothing is
+  stored; each pixel reads the scene at a shifted row. The game holds still
+  while a melt runs.
+- **Title:** `TETRICIDE` at 16 px blocks, letters dropping in one by one, a
+  diagonal shine sweeping across, a drop shadow, a color-cycling
+  `PRESS SPACE`, the controls, and our names, over the plain gradient.
+- **Game over:** a gray curtain rises over the stack, one row every 2 frames
+  (40 frames). Then the board melts into the game-over scene: `GAME OVER` at
+  8x in a yellow-orange-red gradient with a drop shadow and a shine, the
+  final lines and level at 4x, a blinking `PRESS SPACE`, over the plain
+  gradient.
 
 Palette, as `RGB` 4 bits each:
 

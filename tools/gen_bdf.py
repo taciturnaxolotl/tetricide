@@ -33,9 +33,11 @@ BLOCKS = {
                     ("pixel_row", 10), ("pixel_col", 10)]),
     "tetris_core": ([("clk", 1), ("reset_n", 1), ("ps2_clk", 1), ("ps2_data", 1),
                      ("vert_sync", 1), ("pixel_row", 10), ("pixel_col", 10),
-                     ("start_level", 4), ("force_piece", 3), ("show_ghost", 1)],
+                     ("start_level", 4), ("force_piece", 3), ("show_ghost", 1),
+                     ("sound_en", 1), ("sound_test", 1)],
                     [("red", 4), ("green", 4), ("blue", 4), ("lines_bcd", 16),
-                     ("level_bcd", 8), ("game_over", 1)]),
+                     ("level_bcd", 8), ("game_over", 1), ("spk_p", 1), ("spk_n", 1),
+                     ("spk_on", 1)]),
     "vga_out": ([("clk", 1), ("h_sync", 1), ("v_sync", 1), ("video_on", 1),
                  ("red", 4), ("green", 4), ("blue", 4)],
                 [("vga_r", 4), ("vga_g", 4), ("vga_b", 4), ("vga_hs", 1), ("vga_vs", 1)]),
@@ -82,6 +84,8 @@ INSTANCES = [
         "clk": "clk25", "reset_n": "KEY[0]", "ps2_clk": "PS2_CLK", "ps2_data": "PS2_DAT",
         "vert_sync": "vs", "pixel_row": "row[9..0]", "pixel_col": "col[9..0]",
         "start_level": "SW[3..0]", "force_piece": "hi,hi,hi", "show_ghost": "SW[9]",
+        "sound_en": "SW[8]", "sound_test": "SW[7]", "spk_p": "o_spk_p", "spk_n": "o_spk_n",
+        "spk_on": "o_ledr8",
         "red": "r[3..0]", "green": "g[3..0]", "blue": "b[3..0]",
         "lines_bcd": "lines[15..0]", "level_bcd": "o_ledg[7..0]", "game_over": "o_ledr9"}),
     ("vga_out", (COL3, 64), {
@@ -103,7 +107,8 @@ OUTPUTS = [("VGA_R[3..0]", "o_vga_r[3..0]", 96), ("VGA_G[3..0]", "o_vga_g[3..0]"
            ("VGA_VS", "o_vga_vs", 224),
            ("HEX3[6..0]", "o_hex3[6..0]", 384), ("HEX2[6..0]", "o_hex2[6..0]", 416),
            ("HEX1[6..0]", "o_hex1[6..0]", 448), ("HEX0[6..0]", "o_hex0[6..0]", 480),
-           ("LEDG[7..0]", "o_ledg[7..0]", 544), ("LEDR[9]", "o_ledr9", 576)]
+           ("LEDG[7..0]", "o_ledg[7..0]", 544), ("LEDR[9]", "o_ledr9", 576), ("LEDR[8]", "o_ledr8", 608),
+           ("GPIO_0[0]", "o_spk_p", 656), ("GPIO_0[6]", "o_spk_n", 688)]
 IN_X = 0
 VCC_AT = (600, 520)
 
@@ -232,9 +237,9 @@ def build():
 
 
 def preview(items):
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 {OUT_X + 240} 660" '
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 {OUT_X + 240} 720" '
            'font-family="Arial" font-size="11"><rect x="-20" y="-20" width="{OUT_X + 240}" '
-           f'height="660" fill="white"/>',
+           f'height="720" fill="white"/>',
            '<text x="0" y="12" font-size="14">Tetricide  -  Kieran Klukas + Nathan Crosby</text>']
     for it in items:
         if it[0] == "blk":

@@ -240,12 +240,34 @@ the renderer's color together with the syncs, so they stay aligned.
 | `CLOCK_50` | ÷2 → 25 MHz |
 | `KEY[0]` | reset (active low) |
 | `SW[3..0]` | starting level |
+| `SW[7]` | sound test: steady A4 (440 Hz), bypassing the music |
+| `SW[8]` | sound on/off |
 | `SW[9]` | ghost piece on/off |
 | `PS2_CLK`, `PS2_DAT` | keyboard |
 | `VGA_R/G/B[3..0]`, `VGA_HS`, `VGA_VS` | monitor |
 | `HEX3..HEX0` | lines cleared |
 | `LEDG[7..0]` | level, in BCD |
 | `LEDR[9]` | game over |
+| `LEDR[8]` | lit while the speaker is being driven |
+| `GPIO_0[0]`, `GPIO_0[6]` | speaker, driven in opposite phase |
+
+## sound
+
+A square wave for a small speaker across `GPIO_0[0]` and `GPIO_0[6]`, the
+same hookup as the lab's sound circuit. The pins are driven in opposite
+phase, so the speaker sees twice the swing; both are low when silent.
+`SW[8]` turns it on.
+
+- **Music:** Korobeiniki (Russian folk song, public domain), 40 notes stored
+  as (note, eighths). An eighth is 12 frames at level 0, one frame shorter
+  every 2 levels down to 7, so it speeds up as you level. The last frame of
+  each note is silent so repeated notes stay distinct. It plays on the title
+  and game screens and stops at game over.
+- **Effects** take over from the music for a few frames, 3 frames per step:
+  lock is a low A3 blip, a line clear runs C5 E5 G5 C6, four lines run up to
+  G6, and game over falls from A5 to A3.
+- Pitches are half-periods in 25 MHz clocks (A4 = 28,409).
+- `make sound` renders 9 s of it to `sim/out/sound.wav`.
 
 ## Repo layout
 

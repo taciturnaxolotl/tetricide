@@ -16,12 +16,17 @@ entity tetris_core is
         start_level : in  std_logic_vector(3 downto 0);
         force_piece : in  std_logic_vector(2 downto 0);  -- tie to "111"
         show_ghost  : in  std_logic;
+        sound_en    : in  std_logic;
+        sound_test  : in  std_logic;
         red         : out std_logic_vector(3 downto 0);
         green       : out std_logic_vector(3 downto 0);
         blue        : out std_logic_vector(3 downto 0);
         lines_bcd   : out std_logic_vector(15 downto 0);
         level_bcd   : out std_logic_vector(7 downto 0);
-        game_over   : out std_logic
+        game_over   : out std_logic;
+        spk_p       : out std_logic;
+        spk_n       : out std_logic;
+        spk_on      : out std_logic
     );
 end tetris_core;
 
@@ -45,6 +50,8 @@ architecture rtl of tetris_core is
     signal mph    : mphase_t;
     signal mt     : integer range 0 to MELT_LEN - 1;
     signal sct    : integer range 0 to 127;
+    signal lvl    : integer range 0 to 29;
+    signal e_lock, e_clear, e_tetris, e_over : std_logic;
 begin
     keys : entity work.ps2_keys
         port map (clk, reset_n, ps2_clk, ps2_data,
@@ -60,7 +67,15 @@ begin
             cur_py => cy, ghost_py => gy, next_shape => ns, game_over => over,
             lines_bcd => lines, level_bcd => level, piece_on => pon,
             anim_rows => arows, anim_t => at, over_t => ot, frame_cnt => fcnt,
-            scene => scn, mphase => mph, melt_t => mt, scene_t_out => sct);
+            scene => scn, mphase => mph, melt_t => mt, scene_t_out => sct,
+            level_out => lvl, ev_lock => e_lock, ev_clear => e_clear,
+            ev_tetris => e_tetris, ev_over => e_over);
+
+    audio : entity work.sound
+        port map (
+            clk => clk, enable => sound_en, test => sound_test, vert_sync => vert_sync, scene => scn,
+            level => lvl, ev_lock => e_lock, ev_clear => e_clear, ev_tetris => e_tetris,
+            ev_over => e_over, spk_p => spk_p, spk_n => spk_n, active => spk_on);
 
     draw : entity work.renderer
         port map (

@@ -17,6 +17,7 @@ set_global_assignment -name VHDL_FILE tetris_pkg.vhd
 set_global_assignment -name VHDL_FILE ps2_keys.vhd
 set_global_assignment -name VHDL_FILE game_logic.vhd
 set_global_assignment -name VHDL_FILE renderer.vhd
+set_global_assignment -name VHDL_FILE sound.vhd
 set_global_assignment -name VHDL_FILE tetris_core.vhd
 set_global_assignment -name VHDL_FILE vga_timing.vhd
 set_global_assignment -name VHDL_FILE clk_div2.vhd

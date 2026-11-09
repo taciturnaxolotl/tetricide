@@ -21,6 +21,7 @@ architecture sim of tb_core is
     signal lines_bcd   : std_logic_vector(15 downto 0);
     signal level_bcd   : std_logic_vector(7 downto 0);
     signal game_over   : std_logic;
+    signal spk_p       : std_logic;
     signal done        : boolean := false;
 
     constant WELL : rgb_t := x"102";
@@ -42,9 +43,10 @@ begin
         port map (
             clk => clk, reset_n => reset_n, ps2_clk => ps2_clk, ps2_data => ps2_data,
             vert_sync => vert_sync, pixel_row => pixel_row, pixel_col => pixel_col,
-            start_level => "0000", force_piece => force_piece, show_ghost => '1',
+            start_level => "0000", force_piece => force_piece, show_ghost => '1', sound_en => '1', sound_test => '0',
             red => red, green => green, blue => blue,
-            lines_bcd => lines_bcd, level_bcd => level_bcd, game_over => game_over);
+            lines_bcd => lines_bcd, level_bcd => level_bcd, game_over => game_over,
+            spk_p => spk_p, spk_n => open, spk_on => open);
 
     script : process
         type char_file is file of character;

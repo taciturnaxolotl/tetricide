@@ -39,7 +39,12 @@ entity game_logic is
         scene       : out scene_t;
         mphase      : out mphase_t;
         melt_t      : out integer range 0 to MELT_LEN - 1;
-        scene_t_out : out integer range 0 to 127          -- frames since scene appeared
+        scene_t_out : out integer range 0 to 127;         -- frames since scene appeared
+        level_out   : out integer range 0 to 29;
+        ev_lock     : out std_logic;                      -- one-clock pulses for the sound
+        ev_clear    : out std_logic;
+        ev_tetris   : out std_logic;
+        ev_over     : out std_logic
     );
 end game_logic;
 
@@ -159,8 +164,10 @@ begin
     mphase     <= mph;
     melt_t     <= mt;
     scene_t_out <= sct;
+    level_out   <= lvl;
 
     process (clk)
+        variable nfull : integer range 0 to ROWS;
         variable keys  : std_logic_vector(5 downto 0);
         variable acc   : std_logic_vector(5 downto 0);
         variable fp    : std_logic_vector(5 downto 0);
@@ -204,6 +211,11 @@ begin
                 mt     <= 0;
             end if;
 
+            ev_lock   <= '0';
+            ev_clear  <= '0';
+            ev_tetris <= '0';
+            ev_over   <= '0';
+
             keys  := k_drop & k_ccw & k_cw & k_down & k_right & k_left;
             acc   := pressed or (keys and not kprev);
             kprev <= keys;
@@ -242,7 +254,8 @@ begin
 
                 when S_SPAWN_CHK =>
                     if hit then
-                        over <= '1';
+                        over    <= '1';
+                        ev_over <= '1';
                         st   <= S_OVER;
                     else
                         ky <= 1;
@@ -403,6 +416,7 @@ begin
                     end if;
 
                 when S_LOCK =>
+                    ev_lock <= '1';
                     for r in 0 to 3 loop
                         for c in 0 to 3 loop
                             if mask_bit(cs, cr, r, c) = '1' and cy + r <= ROWS - 1
@@ -415,13 +429,20 @@ begin
 
                 -- mark full rows and play the dissolve before collapsing them
                 when S_FIND =>
+                    nfull := 0;
                     for r in 0 to ROWS - 1 loop
                         if row_full(brd(r)) then
                             arows(r) <= '1';
+                            nfull := nfull + 1;
                         else
                             arows(r) <= '0';
                         end if;
                     end loop;
+                    if nfull >= 4 then
+                        ev_tetris <= '1';
+                    elsif nfull > 0 then
+                        ev_clear <= '1';
+                    end if;
                     at <= 0;
                     st <= S_ANIM;
 

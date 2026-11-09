@@ -1,0 +1,11 @@
+# Add this one file to the Quartus project (Project > Add/Remove Files)
+# and every VHDL file below comes with it.
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/pieces.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/art.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/tetris_pkg.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/ps2_keys.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/game_logic.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/renderer.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/tetris_core.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/vga_timing.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "src/tetricide.vhd"]
